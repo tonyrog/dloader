@@ -43,12 +43,15 @@ if for example code:priv_dir(cl) is passed to dloader:cache_nif then
 the directory code:priv_dir(cl) / erlang:system_info(system_architecture) 
 is searched before code:priv_dir(cl) in the boot server.
 
+## Starting the boot server
+
+    erl -kernel start_boot_server true boot_server_slaves '[{10,0,0,1}]'
+        optional [ -sname master -setcookie abcd ]
+        
 ## Loading code from boot server
 
     erl -loader inet -id slave -hosts 10.0.0.2 
         optional [ -sname slave -setcookie abcd ]
 
-## Starting the boot server
+slave node in the above example is located at ip 10.0.0.1 and the server is located at ip 10.0.0.2
 
-    erl -kernel start_boot_server true boot_server_slaves '[{10,0,0,1}]'
-        optional -sname master -setcookie abcd
