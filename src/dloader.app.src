@@ -1,0 +1,8 @@
+{application, dloader,
+ [
+  {description, "Dynamic loader."},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [kernel,stdlib]},
+  {env, []}
+ ]}.
