@@ -1,7 +1,7 @@
 Dynamic loader
 ==============
 
-dloader is used to load drivers and nif using the inet loader.
+dloader is used to load drivers and nifs using the inet loader.
 This can be used when developing embedded code or when runnig
 slave nodes that are using drivers or nifs.
 
@@ -15,14 +15,13 @@ to
 
     dloader:load_driver(code:priv_dir(gpio), "gpio_drv")
 
-dloader will load driver as normal if erl_prim_loader is loading from
-files, but will use load and store a cached copy otherwise. Then load
-from that copy.
+dloader will load driver as normal if erl\_prim\_loader is loading from
+files (default), but will cache a local copy to load from otherwise.
 
 # Loading nifs
 
 Since the call that load nifs must be called from the module
-that "imports" them. The call sequence is slightly different
+that "imports" them, the call sequence is slightly different
 when loading nifs.
 
 Existing code looks like
@@ -30,18 +29,18 @@ Existing code looks like
     Nif = filename:join(code:priv_dir(cl), "cl_nif"),
     erlang:load_nif(Nif, 0).
 
-must be changed to
+is changed to
 
    {ok,Nif} = dloader:cache_nif(code:priv_dir(cl), "cl_nif"),
    erlang:load_nif(Nif, 0).
 
 # Cross compiled drivers and nifs
 
-Cross compiled nifs and drivers should be stored in sub directories
-under the path used to locate the driver or nif. This means that
-if for example code:priv_dir(cl) is passed to dloader:cache_nif then 
-the directory code:priv_dir(cl) / erlang:system_info(system_architecture) 
-is searched before code:priv_dir(cl) in the boot server.
+Cross compiled drivers and nifs may be stored in sub directories
+under the path used to locate the driver or nif. dloader will
+check for the driver or nif firstly in the path with the system_architecuture
+name appended to name that is filename:join(Path, erlang:system\_info(system\_architecture)
+before checking the path.
 
 ## Starting the boot server
 
