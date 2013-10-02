@@ -9,11 +9,11 @@ slave nodes that are using drivers or nifs.
 
 Code that are loading driver explicitly should be changed from
 
-    erl_ddll:load(code:priv_dir(gpio), "gpio_drv")
+    erl_ddll:load(code:priv_dir(my_app), "foo_drv")
 
 to 
 
-    dloader:load_driver(code:priv_dir(gpio), "gpio_drv")
+    dloader:load_driver(code:priv_dir(my_app), "foo_drv")
 
 dloader will load driver as normal if erl\_prim\_loader is loading from
 files (default), but will cache a local copy to load from otherwise.
@@ -26,12 +26,12 @@ when loading nifs.
 
 Existing code looks like
 
-    Nif = filename:join(code:priv_dir(cl), "cl_nif"),
+    Nif = filename:join(code:priv_dir(my_app), "bar_nif"),
     erlang:load_nif(Nif, 0).
 
 is changed to
 
-    {ok,Nif} = dloader:cache_nif(code:priv_dir(cl), "cl_nif"),
+    {ok,Nif} = dloader:cache_nif(code:priv_dir(my_app), "bar_nif"),
     erlang:load_nif(Nif, 0).
 
 # Cross compiled drivers and nifs
@@ -45,12 +45,12 @@ before checking the path.
 ## Starting the boot server
 
     erl -kernel start_boot_server true boot_server_slaves '[{10,0,0,1}]'
-        optional [ -sname master -setcookie abcd ]
+        optional [ -sname master -setcookie my_cookie ]
         
 ## Loading code from boot server
 
     erl -loader inet -id slave -hosts 10.0.0.2 
-        optional [ -sname slave -setcookie abcd ]
+        optional [ -sname slave -setcookie my_cookie ]
 
 slave node in the above example is located at ip 10.0.0.1 and the server is located at ip 10.0.0.2
 
