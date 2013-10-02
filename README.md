@@ -31,8 +31,8 @@ Existing code looks like
 
 is changed to
 
-   {ok,Nif} = dloader:cache_nif(code:priv_dir(cl), "cl_nif"),
-   erlang:load_nif(Nif, 0).
+    {ok,Nif} = dloader:cache_nif(code:priv_dir(cl), "cl_nif"),
+    erlang:load_nif(Nif, 0).
 
 # Cross compiled drivers and nifs
 
