@@ -33,7 +33,7 @@ load_driver(Path, Driver) ->
 cache_driver(Path, Driver) ->
     case load_locally() of
 	true ->
-	    {ok,Path};
+	    local_path(Path, name_ext(Driver));
 	false ->
 	    load_path(Path, name_ext(Driver))
     end.
@@ -45,14 +45,16 @@ cache_driver(Path, Driver) ->
 cache_nif(Path, Nif) ->
     case load_locally() of
 	true ->
-	    {ok, filename:join(Path, Nif)};
+	    case local_path(Path, name_ext(Nif)) of
+		{ok, LPath} ->
+		    {ok, filename:join(LPath, Nif)};
+		Error -> Error
+	    end;
 	false ->
-	    NifExt = name_ext(Nif),
-	    case load_path(Path, NifExt) of
-		{ok,Path1} ->
-		    {ok, filename:join(Path1, Nif)};
-		Error ->
-		    Error
+	    case load_path(Path, name_ext(Nif)) of
+		{ok, CPath} ->
+		    {ok, filename:join(CPath, Nif)};
+		Error -> Error
 	    end
     end.
 
@@ -69,13 +71,11 @@ cache_dir() ->
 
 %% return name with the correct driver/nif extension
 name_ext(Name) ->
-    Ext = case os:type() of
-	      {unix,_} -> ".so";
-	      {win32,_} -> ".dll"
-	  end,
-    case filename:extension(Name) of
-	"" -> Name++Ext;
-	Ext -> Name
+    Ext = filename:extension(Name),
+    Base = filename:basename(Name,Ext),
+    case os:type() of
+	{unix,_} ->  Base++".so";
+	{win32,_} -> Base++".dll"
     end.
 
 %%
@@ -117,6 +117,19 @@ load_path(Path, File) ->
 	    Error
     end.
 
+%% can be replaced with dloader later
+local_path(Path, NameExt) ->
+    SysPath = make_system_path(Path),
+    case is_regular(filename:join(SysPath,NameExt)) of
+	true -> {ok, SysPath};
+	false ->
+	    case is_regular(filename:join(Path,NameExt)) of
+		true ->  {ok, Path};
+		false -> {error, enoent}
+	    end
+    end.
+
+
 %% write file entry in cache
 -ifdef(_not_used__).
 write_cache_entry(File, Data) ->
@@ -157,7 +170,6 @@ is_modified(File, FI, CacheDir) ->
 	    true
     end.
 
-
 find_file([Path|Ps], Name) ->
     File = filename:join(Path,Name),
     case erl_prim_loader:read_file_info(File) of
@@ -168,6 +180,14 @@ find_file([Path|Ps], Name) ->
     end;
 find_file([], _NameExt) ->
     {error,enoent}.
+
+is_regular(File) ->
+    case erl_prim_loader:read_file_info(File) of
+	{ok,FI} ->
+	    FI#file_info.type =:= regular;
+	_ ->
+	    false
+    end.
 
 
 make_system_path(Path) ->
